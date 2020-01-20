@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="UTF-8"?><diagram program="umlet" version="11.5.1">
+  <zoom_level>9</zoom_level>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>648</x>
+      <y>207</y>
+      <w>441</w>
+      <h>261</h>
+    </coordinates>
+    <panel_attributes>/Modbus::AbstractMaster/
+--
+#turnaroundDelay_ms: uint32_t
+#runningTxn: Modbus::Txn*
+#pendingList: Modbus::Txn*
+#completeList: Modbus::Txn*
+#responseTimer: AbstractTimer
+#broadcastRunning: bool
+-listNext: Modbus::Connection*
+--
++setTurnaroundDelay_ms(uint32_t)
++operate(): bool
++readyForNextTxn(): bool
++startTxn(Modbus::Txn*)
++getCompletedTxn(): Modbus::Txn*
+/#startTx(): bool/
+/#runTx(): bool/
+/#runRx(): bool/
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>891</x>
+      <y>603</y>
+      <w>324</w>
+      <h>180</h>
+    </coordinates>
+    <panel_attributes>Modbus::SlaveProxy
+--
++slaveId: uint8_t const
+#connection: Modbus::Connection*
+#queueHead: Modbus::Txn*
+#resultHead: Modbus::Txn*
+-listNext: Modbus::SlaveProxy*
+--
++runQueue(): bool
++enqueueTxn(Modbus::Txn&amp;): bool
++queueLength(): unsigned
++dequeueResult(): Modbus::Txn*</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>1305</x>
+      <y>207</y>
+      <w>378</w>
+      <h>243</h>
+    </coordinates>
+    <panel_attributes>/Modbus::Txn/
+--
+#txnId: uint16_t
+#slaveId: uint8_t
+#functionCode: uint8_t const
+#autoDiscard: bool
+#resultCode: Modbus::ResultCode
+-qNext: Modbus::Txn*
+--
++setTxnId(uint16_t)
++hasTxnId(uint16_t)
++getFunctionCode()
++setResultCode(Modbus::ResultCode)
++getResultCode()
+/+getTxLength(): uint8_t/
+/+getTxData(txData: PduDataBuffer&amp;, unsigned offset): bool/
+/+processRxData(rxData: const PduConstDataBuffer&amp;)/
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>927</x>
+      <y>441</y>
+      <w>44</w>
+      <h>179</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;.</panel_attributes>
+    <additional_attributes>27;27;27;162</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>1062</x>
+      <y>270</y>
+      <w>260</w>
+      <h>44</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;.</panel_attributes>
+    <additional_attributes>243;27;27;27</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>1188</x>
+      <y>423</y>
+      <w>170</w>
+      <h>251</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;.</panel_attributes>
+    <additional_attributes>153;27;153;234;27;234</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>0</x>
+      <y>756</y>
+      <w>558</w>
+      <h>216</h>
+    </coordinates>
+    <panel_attributes>Modbus::AsciiMaster
+--
+#serialLine: ByteStream*
+#txLrc: uint8_t
+#rxSplitTime_ms: uint32_t
+#rxBuffer[513]: uint8_t
+#rxFill: uint8_t
+#rxGapCounter: MillisecondCounter
+--
++sendOn(ByteStream*)
+#startTx(): bool
+#runTx(): bool
+#runRx(): bool
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>0</x>
+      <y>531</y>
+      <w>558</w>
+      <h>198</h>
+    </coordinates>
+    <panel_attributes>/Modbus::TcpMaster/
+--
+#serverAddress: IpAddress
+#serverPort: uint16_t
+#numberMaxOfClientTransaction: uint8_t
+#mbaphdTxBuffer[7]: uint8_t
+#mbaphdRxBuffer[7]: uint8_t
+--
++setServerAddress(IpAddress, port: uint16_t, maxTxn: uint8_t)
+#startTx(): bool
+#runTx(): bool
+#runRx(): bool
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>531</x>
+      <y>441</y>
+      <w>206</w>
+      <h>116</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-</panel_attributes>
+    <additional_attributes>189;27;189;99;27;99</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>531</x>
+      <y>441</y>
+      <w>206</w>
+      <h>341</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-</panel_attributes>
+    <additional_attributes>189;27;189;324;27;324</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>1548</x>
+      <y>477</y>
+      <w>261</w>
+      <h>126</h>
+    </coordinates>
+    <panel_attributes>Modbus::WriteSingleCoil
+--
+#coilAddress: uint16_t
+#coilFlagBuffer[2]: uint8_t
+--
++setCoil(addr: uint16_t, state: bool)
++getTxLength(): uint8_t
++getTxData(txData: PduDataBuffer&amp;, unsigned offset): bool
++processRxData(rxData: const PduConstDataBuffer&amp;)
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>1476</x>
+      <y>423</y>
+      <w>89</w>
+      <h>80</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-</panel_attributes>
+    <additional_attributes>27;27;27;63;72;63</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>1548</x>
+      <y>621</y>
+      <w>261</w>
+      <h>153</h>
+    </coordinates>
+    <panel_attributes>Modbus::WriteMultipleCoils
+--
+#startAddressBuffer: uint16_t
+#bitBuffer[2]: uint8_t
+--
++getTxLength(): uint8_t
++getTxData(txData: PduDataBuffer&amp;, unsigned offset): bool
++processRxData(rxData: const PduConstDataBuffer&amp;)
+/#getStartAddress(): uint16_t/
+/#getNumOfCoils()/
+/#getCoilBits(unsigned offset): uint16_t/</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>1476</x>
+      <y>423</y>
+      <w>89</w>
+      <h>224</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-</panel_attributes>
+    <additional_attributes>27;27;27;207;72;207</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>1656</x>
+      <y>792</y>
+      <w>44</w>
+      <h>152</h>
+    </coordinates>
+    <panel_attributes>lt=.</panel_attributes>
+    <additional_attributes>27;135;27;27</additional_attributes>
+  </element>
+  <element>
+    <type>com.umlet.element.Class</type>
+    <coordinates>
+      <x>0</x>
+      <y>999</y>
+      <w>558</w>
+      <h>225</h>
+    </coordinates>
+    <panel_attributes>Modbus::RtuMaster
+--
+#serialLine: ByteStream*
+#txCrc: uint16_t
+#txGuardTimer: AbstractTimer
+#rxSplitTime_ms: uint32_t
+#rxBuffer[256]: uint8_t
+#rxFill: uint8_t
+#rxGapCounter: MillisecondCounter
+--
++sendOn(ByteStream*)
+#startTx(): bool
+#runTx(): bool
+#runRx(): bool
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+  <element>
+    <type>com.umlet.element.Relation</type>
+    <coordinates>
+      <x>531</x>
+      <y>441</y>
+      <w>206</w>
+      <h>584</h>
+    </coordinates>
+    <panel_attributes>lt=&lt;&lt;-</panel_attributes>
+    <additional_attributes>189;27;189;567;27;567</additional_attributes>
+  </element>
+</diagram>

@@ -16,8 +16,6 @@ namespace Modbus
 class ReadBits2Array: public Modbus::Txn
 {
 public:
-  explicit
-  ReadBits2Array(uint8_t functionCode, unsigned* array, uint16_t numOfBits);
 //  virtual ~ReadBits2Array();
 
   void readTo(unsigned* array, uint16_t numOfBits);
@@ -33,6 +31,9 @@ public:
   unsigned processRxData(const PduConstDataBuffer& rxData) override;
 
 protected:
+  explicit
+  ReadBits2Array(uint8_t functionCode, unsigned* array, uint16_t numOfBits);
+
   static const unsigned TxPduLength = 5;
   uint8_t txPduBuffer[TxPduLength];
   unsigned* bitBuffer;

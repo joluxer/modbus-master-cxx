@@ -73,6 +73,8 @@ protected:
 private:
   AbstractMaster* listNext;
 
+
+
   friend class Master;
 };
 

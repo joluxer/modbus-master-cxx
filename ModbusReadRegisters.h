@@ -16,7 +16,6 @@ namespace Modbus
 class ReadRegisters2Array: public Modbus::Txn
 {
 public:
-  ReadRegisters2Array(uint8_t functionCode, uint16_t* array, uint16_t numOfRegs);
 //  virtual ~ReadRegisters2Array();
 
   void readTo(uint16_t* array, uint16_t numOfRegs);
@@ -32,6 +31,9 @@ public:
   unsigned processRxData(const PduConstDataBuffer& rxData) override;
 
 protected:
+  explicit
+  ReadRegisters2Array(uint8_t functionCode, uint16_t* array, uint16_t numOfRegs);
+
   static const unsigned TxPduLength = 5;
   uint8_t txPduBuffer[TxPduLength];
   uint16_t* regsBuffer;

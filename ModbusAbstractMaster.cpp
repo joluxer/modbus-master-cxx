@@ -87,9 +87,9 @@ bool AbstractMaster::startTxn(std::unique_ptr<Txn>&& txn)
 {
   bool success = false;
 
-  if (readyForNextTxn())
+  if (txn)
   {
-    if (txn)
+    if (readyForNextTxn())
     {
       runningTxn = std::move(txn);
 
@@ -115,11 +115,11 @@ bool AbstractMaster::startTxn(std::unique_ptr<Txn>&& txn)
         }
       }
     }
-  }
-  else
-  {
-    txn->setResultCode(MasterNotReady);
-    completedList.push(std::move(txn));
+    else
+    {
+      txn->setResultCode(MasterNotReady);
+      completedList.push(std::move(txn));
+    }
   }
 
   return success;

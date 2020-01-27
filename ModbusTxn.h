@@ -45,6 +45,7 @@ public:
   bool isBusy() const;
   ResultCode getResultCode() const;
   uint8_t getSlaveId() const;
+  uint8_t getFunctionCode() const;
   uint8_t exceptionCode() const;
   bool hasTxnId(uint16_t id) const;
 
@@ -125,6 +126,11 @@ inline
 uint8_t Txn::getSlaveId() const
 {
   return slaveId;
+}
+
+uint8_t Txn::getFunctionCode() const
+{
+  return functionCode;
 }
 
 inline

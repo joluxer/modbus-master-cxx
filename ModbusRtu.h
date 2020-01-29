@@ -8,8 +8,13 @@
 #ifndef MODBUSRTU_H_
 #define MODBUSRTU_H_
 
+#include "ModbusTxn.h"
+
+#include "ByteStream.h"
+
 #include <cstdint>
 #include <cmath>
+#include <memory>
 
 #ifndef MODBUS_CRC_ALGORITHM_BITSHIFT
 #ifndef MODBUS_CRC_ALGORITHM_TABLE
@@ -89,18 +94,6 @@ void Rtu::resetCrc()
 }
 
 inline
-uint8_t Rtu::startTx(ByteStream* line, const ::std::unique_ptr<Txn>& runningTxn)
-{
-  static_cast<void>(line);
-  static_cast<void>(runningTxn);
-
-  resetCrc();
-  crcTxOffset = 0;
-
-  return 0;
-}
-
-inline
 bool    Rtu::sendChecksum(ByteStream* line)
 {
   switch(crcTxOffset)
@@ -112,6 +105,7 @@ bool    Rtu::sendChecksum(ByteStream* line)
     crcTxOffset += line->write(uint8_t(pduCrc >> 8));
     // no break
   default:
+    ;
     // no break
   }
 

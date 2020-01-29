@@ -128,6 +128,7 @@ uint8_t Txn::getSlaveId() const
   return slaveId;
 }
 
+inline
 uint8_t Txn::getFunctionCode() const
 {
   return functionCode;

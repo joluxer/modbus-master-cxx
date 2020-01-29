@@ -4,7 +4,10 @@
 #     Author: lode
 
 ADD_LIBRARY(ModbusMasterCore STATIC
-#    ModbusRtuMaster.cpp
+#    ModbusAscii.cpp
+#    ModbusAsciiMaster.cpp
+    ModbusRtu.cpp
+    ModbusRtuMaster.cpp
     ModbusAbstractTcpMaster.cpp
     ModbusAbstractMaster.cpp
     ModbusSlaveProxy.cpp
@@ -19,6 +22,10 @@ ADD_LIBRARY(ModbusMasterRegisterFunctions STATIC
     ModbusReadRegisters.cpp
 )
 
+TARGET_LINK_LIBRARIES(ModbusMasterRegisterFunctions
+    ModbusMasterCore
+)
+
 ADD_LIBRARY(ModbusMasterBitFunctions STATIC
     ModbusReadCoils.cpp
     ModbusReadDiscreteInputs.cpp
@@ -28,6 +35,6 @@ ADD_LIBRARY(ModbusMasterBitFunctions STATIC
 )
 
 TARGET_LINK_LIBRARIES(ModbusMasterBitFunctions
-    ModbusMasterRegisterFunctions
+    ModbusMasterCore
 )
 

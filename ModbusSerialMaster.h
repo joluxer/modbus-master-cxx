@@ -10,11 +10,12 @@
 
 #include "ModbusAbstractMaster.h"
 #include "ModbusRtu.h"
-#include "ModbusAscii.h"
+//#include "ModbusAscii.h"
 
 #include "IoPin.h"
 #include "ByteStream.h"
 #include "pt/pt.h"
+#include "Callback.h"
 
 namespace Modbus
 {
@@ -27,6 +28,7 @@ template<typename EncoderPolicy = Modbus::Rtu>
 class SerialMaster: public AbstractMaster
 {
 public:
+  SerialMaster(AbstractTimer& masterTimer, AbstractTimer& txGuardTimer, AbstractTimer& rxSplitTimer);
 //  virtual
 //  ~SerialMaster();
 
@@ -47,12 +49,14 @@ public:
   SerialMaster& setTimeoutsForBaudrate(uint32_t baudrate); ///< set timeouts depending on baudrate and specifications, see also @ref setTimeouts_ms()
   SerialMaster& setTimeouts_ms(uint32_t txGuardTime_ms, uint32_t rxSplitLimit_ms); ///< set timeouts explicitly, normally they depend on the baudrate in use, see also @ref setTimeoutsForBaudrate()
 
-protected:
-  explicit
-  SerialMaster(AbstractTimer& masterTimer, AbstractTimer& txGuardTimer, AbstractTimer& rxSplitTimer);
+  void connectEnableTransmitter(const Callback<void, bool>* signal);
+  void connectEnableReceiver(const Callback<void, bool>* signal);
 
+protected:
   ByteStream* serialLine;
   IoPin* rs485TxEnable;
+  const Callback<void, bool>* enableTransmitter;
+  const Callback<void, bool>* enableReceiver;
   AbstractTimer& txGuardTimer;      // runs in the gap between two transmissions, resp. in front of an upcoming transmission
   AbstractTimer& rxSplitTimer;      // runs during character reception for rxSplitLimit_ms, to check the gap between two characters
   uint32_t txGuardTime_ms;
@@ -76,6 +80,18 @@ protected:
 
   bool discardToEndOfFrame(); ///< @return true on end-of-frame, side effect: discard all incoming characters, if there are some, mark rxFrameIsBad = true
 };
+
+template<typename EncoderPolicy>
+void SerialMaster<EncoderPolicy>::connectEnableTransmitter(const Callback<void, bool>* signal)
+{
+  enableTransmitter = signal;
+}
+
+template<typename EncoderPolicy>
+void SerialMaster<EncoderPolicy>::connectEnableReceiver(const Callback<void, bool>* signal)
+{
+  enableReceiver = signal;
+}
 
 } /* namespace Modbus */
 

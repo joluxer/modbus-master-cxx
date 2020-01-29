@@ -63,8 +63,20 @@ unsigned ReadBits2Array::processRxData(const PduConstDataBuffer& rx)
 {
   if (bitBuffer)
   {
-    if ((rx.data[0] == functionCode) && (rx.length == (2 + rx.data[1])))
+    do // no got, just break
     {
+      if (rx.data[0] == functionCode)
+      {
+        setResultCode(AnswerDoesNotMatchRequest);
+        break;
+      }
+
+      if (rx.length == (2 + rx.data[1]))
+      {
+        setResultCode(UnknownCommunicationError);
+        break;
+      }
+
       auto const bufferByteCount = bufferLength * sizeof(bitBuffer[0]);
       auto dataLength = rx.data[1];
 
@@ -92,8 +104,7 @@ unsigned ReadBits2Array::processRxData(const PduConstDataBuffer& rx)
           bitsTmp = 0;
         }
       }
-    }
-    // TODO: Logging of rejected RX data set in case of inconsistency
+    } while (false);
   }
   else
     resultCode = NoReceiveBuffer;

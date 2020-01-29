@@ -63,8 +63,20 @@ unsigned ReadRegisters2Array::processRxData(const PduConstDataBuffer& rx)
 {
   if (regsBuffer)
   {
-    if ((rx.data[0] == functionCode) && (rx.length == (2 + rx.data[1])))
+    do // no goto, just break
     {
+      if (rx.data[0] != functionCode)
+      {
+        setResultCode(AnswerDoesNotMatchRequest);
+        break;
+      }
+
+      if (rx.length == (2 + rx.data[1]))
+      {
+        setResultCode(UnknownCommunicationError);
+        break;
+      }
+
       auto const bufferByteCount = bufferLength * sizeof(regsBuffer[0]);
       auto dataLength = rx.data[1];
 
@@ -82,8 +94,7 @@ unsigned ReadRegisters2Array::processRxData(const PduConstDataBuffer& rx)
         rxIdx = rxIdx + 2;
         ++regsIdx;
       }
-    }
-    // TODO: Logging of rejected RX data set in case of inconsistency
+    } while (false);
   }
   else
     resultCode = NoReceiveBuffer;

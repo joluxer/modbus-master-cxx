@@ -12,9 +12,10 @@
 namespace Modbus
 {
 
-SlaveProxy::SlaveProxy(uint8_t slaveId)
+SlaveProxy::SlaveProxy(uint8_t slaveId, bool pushMaster)
 : mySlaveId(slaveId), master(nullptr),
-  pendingCount(0)
+  pendingCount(0),
+  pushMaster(pushMaster)
 {}
 
 //SlaveProxy::~SlaveProxy()
@@ -36,7 +37,8 @@ bool SlaveProxy::runQueue()
     if (master->readyForNextTxn() && txnQueue)
       master->startTxn(txnQueue.pop());
 
-    busy = !!master->operate();
+    if (pushMaster)
+      busy = !!master->operate();
 
     if (txnQueue)
       busy = true;
@@ -97,6 +99,15 @@ bool SlaveProxy::enqueue(std::unique_ptr<Txn>&& txn)
 
   if (success)
     ++pendingCount;
+
+  txn = master->getCompletedTxn(mySlaveId);
+  if (txn)
+  {
+    if (not txn->autoDiscard)
+      resultQueue.push(std::move(txn));
+    else
+      --pendingCount;
+  }
 
   return success;
 }

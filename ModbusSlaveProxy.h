@@ -21,7 +21,7 @@ class SlaveProxy
 {
 public:
   explicit
-  SlaveProxy(uint8_t slaveId);
+  SlaveProxy(uint8_t slaveId, bool pushMaster = true);
 //  virtual ~SlaveProxy();
 
   void connectVia(AbstractMaster& connection);
@@ -42,6 +42,7 @@ protected:
   Txn::Fifo txnQueue;
   Txn::Fifo resultQueue;
 
+  bool pushMaster:1;
 private:
 };
 

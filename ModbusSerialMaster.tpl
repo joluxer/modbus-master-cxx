@@ -17,6 +17,8 @@ SerialMaster<EncoderPolicy>::SerialMaster(AbstractTimer& masterTimer, AbstractTi
 : AbstractMaster(masterTimer),
   serialLine(nullptr),
   rs485TxEnable(nullptr),
+  enableTransmitter(nullptr),
+  enableReceiver(nullptr),
   txGuardTimer(txGuardTimer),
   rxSplitTimer(rxSplitTimer),
   txGuardTime_ms(0),
@@ -86,6 +88,7 @@ template<typename EncoderPolicy>
 PT_THREAD(SerialMaster<EncoderPolicy>::txRunner())
 {
   register struct pt* pt = &txPt;
+  register unsigned txCount = 0;
 
   PT_BEGIN(pt);
 
@@ -94,22 +97,39 @@ PT_THREAD(SerialMaster<EncoderPolicy>::txRunner())
   if (rs485TxEnable)
     rs485TxEnable->activate();
 
+  if (enableTransmitter)
+    enableTransmitter->send(true);
+
   txDoneCount = lineCodec.startTx(serialLine, runningTxn);
 
   while (txLength > txDoneCount)
   {
-    PT_YIELD(pt);
-    txDoneCount += lineCodec.runTx(serialLine, runningTxn, txDoneCount);
+    txCount = lineCodec.runTx(serialLine, runningTxn, txDoneCount);
+    txDoneCount += txCount;
+    if (not txCount)
+      PT_YIELD(pt);
   }
 
   PT_WAIT_WHILE(pt, lineCodec.sendChecksum(serialLine));
 
-  if (rs485TxEnable)
+  if (enableTransmitter)
+    enableTransmitter->send(false);
+
+ if (rs485TxEnable)
     rs485TxEnable->deactivate();
 
   txGuardTimer.start(txGuardTime_ms);
 
-  PT_INIT(&rxPt);
+  if (runningTxn->getSlaveId() != 0)
+  {
+    // go on with reception, this is no broadcast
+    PT_INIT(&rxPt);
+
+    doRx = true;
+
+    if (enableReceiver)
+      enableReceiver->send(true);
+  }
 
   PT_END(pt);
 }
@@ -124,9 +144,9 @@ bool SerialMaster<EncoderPolicy>::runTx()
 }
 
 template<typename EncoderPolicy>
-void SerialMaster<EncoderPolicy>::discardToEndOfFrame()
+bool SerialMaster<EncoderPolicy>::discardToEndOfFrame()
 {
-  bool eof = txGuardTimer.isActive();
+  bool eof = not txGuardTimer.isActive();
   uint8_t dummy[8];
 
   if (0 != serialLine->readBlock(dummy, sizeof(dummy)))
@@ -139,7 +159,7 @@ template<typename EncoderPolicy>
 PT_THREAD(SerialMaster<EncoderPolicy>::rxRunner())
 {
   register struct pt* pt = &rxPt;
-  unsigned rxCount = 0;
+  register unsigned rxCount = 0;
 
   PT_BEGIN(pt);
 
@@ -197,17 +217,11 @@ PT_THREAD(SerialMaster<EncoderPolicy>::rxRunner())
     PT_RESTART(pt);
   }
 
-  // check for right function code in response
-  if (runningTxn->getFunctionCode() != rxBuffer[1])
-  {
-    if (not handledAsException(PduConstDataBuffer{rxBuffer+1, rxFill}))
-      runningTxn->setResultCode(AnswerDoesNotMatchRequest);
-  }
-  else
-  {
-    runningTxn->setResultCode(NoError); // if RX processing finds any error, the result code is overwritten
-    rxCount = runningTxn->processRxData(PduConstDataBuffer{rxBuffer, rxFill});
-  }
+  runningTxn->setResultCode(NoError); // if RX processing finds any error, the result code is overwritten
+  rxCount = runningTxn->processRxData(PduConstDataBuffer{rxBuffer + 1, uint8_t(rxFill - 1)});
+
+  if (enableReceiver)
+    enableReceiver->send(false);
 
   completedList.push(std::move(runningTxn));
 

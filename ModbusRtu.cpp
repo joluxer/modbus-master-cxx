@@ -88,17 +88,18 @@ void Rtu::updateCrc(uint8_t const* data, unsigned len)
   constexpr unsigned int Poly16 = 0xA001;
   unsigned int lsb, i;
 
-  while (len--)                             /* pass through message buffer */
+  while (len)                             /* pass through message buffer */
   {
-    pduCrc = ((pduCrc ^ *data) | 0xFF00) & (pduCrc | 0x00FF);
+    pduCrc ^= uint16_t(*data);
     for (i = 0; i < 8; ++i)
     {
       lsb = (pduCrc & 0x0001);
       pduCrc = pduCrc >> 1;
       if (lsb)
-        pduCrc = pduCrc ^ Poly16;
+        pduCrc ^= Poly16;
     }
     ++data;
+    --len;
   }
 }
 #endif
@@ -116,8 +117,19 @@ uint8_t Rtu::runTx(ByteStream* line, const ::std::unique_ptr<Txn>& runningTxn, u
     updateCrc(txBuffer.data, done);
   }
 
-
   return done;
+}
+
+uint8_t Rtu::startTx(ByteStream* line, const ::std::unique_ptr<Txn>& runningTxn)
+{
+  resetCrc();
+  crcTxOffset = 0;
+
+  auto id = runningTxn->getSlaveId();
+  updateCrc(&id, 1);
+  line->write(id);
+
+  return runTx(line, runningTxn, 0);
 }
 
 void Rtu::startRx()

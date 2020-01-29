@@ -25,7 +25,10 @@ SerialMaster<EncoderPolicy>::SerialMaster(AbstractTimer& masterTimer, AbstractTi
   rxSplitLimit_ms(15),
   rxFill(0),
   txLength(0), txDoneCount(0),
-  doTx(false), doRx(false), rxFrameIsBad(false)
+  doTx(false), doRx(false), rxFrameIsBad(false),
+  rxSplitTimerIsActive(false),
+  txGuardTimerIsActive(false),
+  checksumIsGood(true)
 {}
 
 //template<typename EncoderPolicy>
@@ -59,6 +62,13 @@ SerialMaster<EncoderPolicy>& SerialMaster<EncoderPolicy>::setTimeouts_ms(uint32_
   this->rxSplitLimit_ms = rxSplitLimit_ms;
 
   return *this;
+}
+
+template<typename EncoderPolicy>
+void SerialMaster<EncoderPolicy>::getTimeouts_ms(uint32_t &txGuardTime_ms, uint32_t &rxSplitLimit_ms)
+{
+  txGuardTime_ms = this->txGuardTime_ms;
+  rxSplitLimit_ms = this->rxSplitLimit_ms;
 }
 
 template<typename EncoderPolicy>
@@ -146,7 +156,7 @@ bool SerialMaster<EncoderPolicy>::runTx()
 template<typename EncoderPolicy>
 bool SerialMaster<EncoderPolicy>::discardToEndOfFrame()
 {
-  bool eof = not txGuardTimer.isActive();
+  bool eof = not (txGuardTimerIsActive = txGuardTimer.isActive());
   uint8_t dummy[8];
 
   if (0 != serialLine->readBlock(dummy, sizeof(dummy)))
@@ -160,6 +170,7 @@ PT_THREAD(SerialMaster<EncoderPolicy>::rxRunner())
 {
   register struct pt* pt = &rxPt;
   register unsigned rxCount = 0;
+//  rxCount = 0;
 
   PT_BEGIN(pt);
 
@@ -169,23 +180,19 @@ PT_THREAD(SerialMaster<EncoderPolicy>::rxRunner())
 
   // wait for first byte(s)
   assert(sizeof(rxBuffer) >= rxFill);
-  PT_YIELD_UNTIL(pt, rxCount = lineCodec.runRx(serialLine, rxBuffer + rxFill, sizeof(rxBuffer) - rxFill));
+  PT_WAIT_UNTIL(pt, !!(rxCount = lineCodec.runRx(serialLine, rxBuffer + rxFill, sizeof(rxBuffer) - rxFill)));
   rxFill += rxCount;
 
   txGuardTimer.start(txGuardTime_ms);
   rxSplitTimer.start(rxSplitLimit_ms);
 
   // watch for split frame errors
-  while (rxSplitTimer.isActive() and not lineCodec.isEndOfRxFrame())
+  while ((sizeof(rxBuffer) > rxFill) and (rxSplitTimerIsActive = rxSplitTimer.isActive()) and not lineCodec.isEndOfRxFrame())
   {
-    if (sizeof(rxBuffer) <= rxFill)
-      break;
-
     // give up CPU while more bytes come in
     PT_YIELD(pt);
 
     // read regular input
-    assert(sizeof(rxBuffer) >= rxFill);
     rxCount = lineCodec.runRx(serialLine, rxBuffer + rxFill, sizeof(rxBuffer) - rxFill);
     rxFill += rxCount;
 
@@ -206,9 +213,11 @@ PT_THREAD(SerialMaster<EncoderPolicy>::rxRunner())
   PT_YIELD_UNTIL(pt, discardToEndOfFrame());
 
   // Frame is over by frame limit timeout
-
-  if (not lineCodec.testChecksumIsGood(rxBuffer, rxFill))
+  if (rxFrameIsBad or not (checksumIsGood = lineCodec.testChecksumIsGood(rxBuffer, rxFill)))
+  {
+    runningTxn->setResultCode(ReceivedChecksumDoesNotMatch);
     PT_RESTART(pt);
+  }
 
   // check for right slave ID in response
   if (runningTxn->getSlaveId() != rxBuffer[0])

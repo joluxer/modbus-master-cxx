@@ -38,6 +38,7 @@ typedef enum
   NoTxBufferSpace,
   TooManyPendingRequests,
   TcpDestinationNotReachable,
+  ReceivedChecksumDoesNotMatch,
   ReceivedSlaveIdDoesNotMatch,
 
 } ResultCode;

@@ -139,7 +139,11 @@ void Rtu::startRx()
 
 unsigned Rtu::runRx(ByteStream* line, uint8_t* buffer, const size_t bufferSpace)
 {
-  return line->readBlock(buffer, bufferSpace);
+  auto count = line->readBlock(buffer, bufferSpace);
+
+//  printf("\n%s: %d\n", __PRETTY_FUNCTION__, count);
+
+  return count;
 }
 
 } /* namespace Modbus */

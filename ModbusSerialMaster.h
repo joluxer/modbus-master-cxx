@@ -48,6 +48,7 @@ public:
 
   SerialMaster& setTimeoutsForBaudrate(uint32_t baudrate); ///< set timeouts depending on baudrate and specifications, see also @ref setTimeouts_ms()
   SerialMaster& setTimeouts_ms(uint32_t txGuardTime_ms, uint32_t rxSplitLimit_ms); ///< set timeouts explicitly, normally they depend on the baudrate in use, see also @ref setTimeoutsForBaudrate()
+  void          getTimeouts_ms(uint32_t &txGuardTime_ms, uint32_t &rxSplitLimit_ms);
 
   void connectEnableTransmitter(const Callback<void, bool>* signal);
   void connectEnableReceiver(const Callback<void, bool>* signal);
@@ -70,6 +71,10 @@ protected:
   bool doTx:1;
   bool doRx:1;
   bool rxFrameIsBad:1;
+
+  bool rxSplitTimerIsActive:1;
+  bool txGuardTimerIsActive:1;
+  bool checksumIsGood:1;
 
   bool startTx() override;  ///< @return true on success, @note moves runningTxn to pendingList, when ready for next transmission or to completedList in case of error
   bool runTx() override;    ///< @return true while busy waiting for TX data space, @note moves runningTxn to pendingList, when ready for next transmission or to completedList in case of error

@@ -129,12 +129,17 @@ bool Rtu::restartRxFrame()
 inline
 bool Rtu::testChecksumIsGood(uint8_t* buffer, uint8_t bufferFill)
 {
-  pduCrc = ~0;
-  updateCrc(buffer, bufferFill - 2);
+  if (bufferFill > 2)
+  {
+    pduCrc = ~0;
+    updateCrc(buffer, bufferFill - 2);
 
-  decltype(pduCrc) const bufferCrc = (buffer[bufferFill - 2]  << 0) | (buffer[bufferFill - 1] << 8);
+    decltype(pduCrc) const bufferCrc = (buffer[bufferFill - 2]  << 0) | (buffer[bufferFill - 1] << 8);
 
-  return (bufferCrc == pduCrc);
+    return (bufferCrc == pduCrc);
+  }
+
+  return false;
 }
 
 } /* namespace Modbus */

@@ -42,7 +42,7 @@ static unsigned char crcTableHi[256] =
 };
 
 /* Table of CRC values for low–order byte */
-static char crcTableLo[] =
+static unsigned char crcTableLo[] =
 {
     0x00, 0xC0, 0xC1, 0x01, 0xC3, 0x03, 0x02, 0xC2, 0xC6, 0x06, 0x07, 0xC7, 0x05, 0xC5, 0xC4, 0x04,
     0xCC, 0x0C, 0x0D, 0xCD, 0x0F, 0xCF, 0xCE, 0x0E, 0x0A, 0xCA, 0xCB, 0x0B, 0xC9, 0x09, 0x08, 0xC8,
@@ -65,8 +65,8 @@ static char crcTableLo[] =
 // this CRC function comes from Modbus_over_serial_line_V1_02.pdf
 void Rtu::updateCrc(uint8_t const* data, unsigned len)
 {
-  uint8_t crcHi = (pduCrc >> 0);            /* high byte of CRC initialized, watch for the reordering, the algorithm below delivers swapped bytes */
-  uint8_t crcLo = (pduCrc >> 8);            /* low byte of CRC initialized, watch for the reordering, the algorithm below delivers swapped bytes */
+  uint8_t crcHi = (pduCrc >> 8);            /* high byte of CRC initialized */
+  uint8_t crcLo = (pduCrc >> 0);            /* low byte of CRC initialized */
   unsigned tableIndex;                      /* will index into CRC lookup table */
 
   while (len--)                             /* pass through message buffer */
@@ -77,7 +77,7 @@ void Rtu::updateCrc(uint8_t const* data, unsigned len)
     crcHi = crcTableLo[tableIndex];
   }
 
-  pduCrc = (crcLo << 8 | crcHi);  // watch for the reordering, the algorithm above delivers swapped bytes
+  pduCrc = (crcLo << 0 | crcHi << 8);
 }
 #endif
 

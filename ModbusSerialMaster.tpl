@@ -226,8 +226,19 @@ PT_THREAD(SerialMaster<EncoderPolicy>::rxRunner())
     PT_RESTART(pt);
   }
 
-  runningTxn->setResultCode(NoError); // if RX processing finds any error, the result code is overwritten
-  rxCount = runningTxn->processRxData(PduConstDataBuffer{rxBuffer + 1, uint8_t(rxFill - 1)});
+  // process RX data
+  rxOffset = 1; // mask the address byte
+  if (not handledAsException(PduConstDataBuffer{&rxBuffer[rxOffset], uint8_t(rxFill - rxOffset)}))
+  {
+    runningTxn->setResultCode(NoError); // if RX processing finds any error, the result code is overwritten
+    do
+    {
+      rxCount = rxOffset;
+      rxOffset += runningTxn->processRxData(PduConstDataBuffer{&rxBuffer[rxOffset], uint8_t(rxFill - rxOffset)});
+      if (rxCount == rxOffset)
+        PT_YIELD(pt);
+    } while (rxOffset < rxFill);
+  }
 
   if (enableReceiver)
     enableReceiver->send(false);

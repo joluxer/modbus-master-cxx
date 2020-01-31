@@ -17,6 +17,7 @@
 #include "Util/TaggingOutStream.h"
 
 #include "Util/ParseRegisterStrings.h"
+#include "Util/PrintModbusMasterExceptionCode.h"
 
 #include "arg/arg.h"
 #include "arg/val.h"
@@ -84,7 +85,7 @@ int main(int argc, char ** argv)
 
   try
   {
-    p.parse(argc, argv, true);
+    p.parse(argc, argv);
   }
   catch (arg::OptError& err)
   {
@@ -188,7 +189,7 @@ int main(int argc, char ** argv)
   }
   else
   {
-    printf("Modbus error code: %d\n", rc);
+    printModbusMasterExceptionCode(rc);
   }
 
   return rc;

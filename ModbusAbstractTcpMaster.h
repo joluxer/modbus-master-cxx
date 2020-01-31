@@ -59,7 +59,7 @@ private:
 
   uint8_t mbaphdTxBuffer[7];
   uint8_t mbaphdRxBuffer[7];
-  uint8_t rxBuffer[253];
+  uint8_t rxBuffer[255];
   std::unique_ptr<Txn> rxTxn;
 
   struct pt rxState;

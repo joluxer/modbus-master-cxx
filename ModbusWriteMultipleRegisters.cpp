@@ -99,7 +99,7 @@ bool WriteMultipleRegistersFromArray::getTxData(PduConstDataBuffer& tx, unsigned
 unsigned WriteMultipleRegistersFromArray::processRxData(const PduConstDataBuffer& rx)
 {
   if (::memcmp(rx.data, txPduHeader, TxPduLength - 1))
-    resultCode = AnswerDoesNotMatchRequest;
+    resultCode = NoReceiveBuffer;
 
   return rx.length;
 }

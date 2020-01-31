@@ -106,7 +106,7 @@ bool WriteMultipleCoilsFromArray::getTxData(PduConstDataBuffer& tx, unsigned off
 unsigned WriteMultipleCoilsFromArray::processRxData(const PduConstDataBuffer& rx)
 {
   if (::memcmp(rx.data, txPduHeader, TxPduHeaderLength - 1))
-    resultCode = AnswerDoesNotMatchRequest;
+    resultCode = NoReceiveBuffer;
 
   return rx.length;
 }

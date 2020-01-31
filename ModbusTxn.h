@@ -90,7 +90,7 @@ protected:
 
   uint8_t const functionCode;
   uint8_t slaveId;  // wird bei der Übergabe an ein SlaveProxy-Objekt festgelegt
-  uint16_t txnId;   // wird bei der Übergabe an ein Connection-Objekt festgelegt
+  uint16_t txnId;   // should be set on the handover to a connection object, if the transport needs this, is nessessary to pull pending transactions form the pending list
   ResultCode resultCode;
 
 private:

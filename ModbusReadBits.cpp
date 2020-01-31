@@ -63,7 +63,7 @@ unsigned ReadBits2Array::processRxData(const PduConstDataBuffer& rx)
 {
   if (bitBuffer)
   {
-    do // no got, just break
+    do // no goto, just break
     {
       if (rx.data[0] == functionCode)
       {

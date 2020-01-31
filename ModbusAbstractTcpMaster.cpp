@@ -192,15 +192,19 @@ PT_THREAD(AbstractTcpMaster::rxEngine())
     PT_EXIT(pt);
   }
 
-  rxOffset = 0;
   // RX-Daten verarbeiten lassen
-  do
+  rxOffset = 0;
+  if (not handledAsException(PduConstDataBuffer{&rxBuffer[rxOffset], uint8_t(expectedRxLen - rxOffset)}))
   {
-    oldOffset = rxOffset;
-    rxOffset += rxTxn->processRxData(PduConstDataBuffer{&rxBuffer[rxOffset], uint8_t(expectedRxLen - rxOffset)});
-    if (oldOffset == rxOffset)
-      PT_YIELD(pt);
-  } while (rxOffset < expectedRxLen);
+    rxTxn->setResultCode(NoError); // if RX processing finds any error, the result code is overwritten
+    do
+    {
+      oldOffset = rxOffset;
+      rxOffset += rxTxn->processRxData(PduConstDataBuffer{&rxBuffer[rxOffset], uint8_t(expectedRxLen - rxOffset)});
+      if (oldOffset == rxOffset)
+        PT_YIELD(pt);
+    } while (rxOffset < expectedRxLen);
+  }
 
   // TXN ist fertig bearbeitet
   completedList.push(std::move(rxTxn));

@@ -64,6 +64,7 @@ protected:
   uint32_t rxSplitLimit_ms;
   uint8_t rxBuffer[256];            // Buffer fill starts with the function code, as the right address is captured at the beginning of reception and fill ends right before the error check, which is done outside of the abstract class
   uint8_t rxFill;
+  uint8_t rxOffset;
   uint8_t txLength, txDoneCount;
   struct pt txPt, rxPt;
   EncoderPolicy lineCodec;

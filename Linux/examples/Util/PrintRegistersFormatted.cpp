@@ -25,7 +25,7 @@ void printOutputFormatHex16Table(uint16_t *regs, unsigned arrayLength, unsigned 
   for (i = 0; i < arrayLength; ++i)
   {
     word = regs[i];
-    printf("0x%.4x | 0x%.4" PRIx16 "\n", addr, word);
+    printf("  0x%.4x | 0x%.4" PRIx16 "\n", addr, word);
     --count;
     ++addr;
     if (count < 1)
@@ -43,7 +43,7 @@ void printOutputFormatInt16Table(uint16_t *regs, unsigned arrayLength, unsigned 
   for (i = 0; i < arrayLength; ++i)
   {
     word = int16_t(regs[i]);
-    printf("0x%.4x | %" PRIi16 "\n", addr, word);
+    printf("  0x%.4x | %" PRIi16 "\n", addr, word);
     --count;
     ++addr;
     if (count < 1)
@@ -61,7 +61,7 @@ void printOutputFormatUint16Table(uint16_t *regs, unsigned arrayLength, unsigned
   for (i = 0; i < arrayLength; ++i)
   {
     word = uint16_t(regs[i]);
-    printf("0x%.4x | %" PRIu16 "\n", addr, word);
+    printf("  0x%.4x | %" PRIu16 "\n", addr, word);
     --count;
     ++addr;
     if (count < 1)
@@ -94,7 +94,7 @@ void printOutputFormatHex32Table(bool bigEndian, uint16_t *regs, unsigned arrayL
       convBuffer.setLittleEndian();
 
     convBuffer.resetOffset();
-    printf("0x%.4x | 0x%.8" PRIx32 "\n", addr, convBuffer.readU32());
+    printf("  0x%.4x | 0x%.8" PRIx32 "\n", addr, convBuffer.readU32());
     --count;
     addr += 2;
     if (count < 1)
@@ -127,7 +127,7 @@ void printOutputFormatInt32Table(bool bigEndian, uint16_t *regs, unsigned arrayL
       convBuffer.setLittleEndian();
 
     convBuffer.resetOffset();
-    printf("0x%.4x | %" PRIi32 "\n", addr, convBuffer.readI32());
+    printf("  0x%.4x | %" PRIi32 "\n", addr, convBuffer.readI32());
     --count;
     addr += 2;
     if (count < 1)
@@ -160,7 +160,7 @@ void printOutputFormatUint32Table(bool bigEndian, uint16_t *regs, unsigned array
       convBuffer.setLittleEndian();
 
     convBuffer.resetOffset();
-    printf("0x%.4x | %" PRIu32 "\n", addr, convBuffer.readU32());
+    printf("  0x%.4x | %" PRIu32 "\n", addr, convBuffer.readU32());
     --count;
     addr += 2;
     if (count < 1)
@@ -193,7 +193,7 @@ void printOutputFormatFloat32Table(bool bigEndian, uint16_t *regs, unsigned arra
       convBuffer.setLittleEndian();
 
     convBuffer.resetOffset();
-    printf("0x%.4x | %f\n", addr, convBuffer.readFloat32());
+    printf("  0x%.4x | %f\n", addr, convBuffer.readFloat32());
     --count;
     addr += 2;
     if (count < 1)
@@ -209,7 +209,7 @@ void printOutputFormatCharString(uint16_t *regs, unsigned arrayLength, unsigned 
   auto char1 = char(regs[0] >> 8);
   auto char2 = char(regs[0] >> 0);
   puts("Register | Value");
-  printf("0x%.4x | %c%c", addr, char1, char2);
+  printf("  0x%.4x | %c%c", addr, char1, char2);
   for (i = 0; i < arrayLength; ++i)
   {
     char1 = char(regs[i] >> 8);

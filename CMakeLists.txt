@@ -12,6 +12,7 @@ ADD_LIBRARY(ModbusMasterCore STATIC
     ModbusAbstractMaster.cpp
     ModbusSlaveProxy.cpp
     ModbusTxn.cpp
+    TxnReturnPath.cpp
 )
 
 ADD_LIBRARY(ModbusMasterRegisterFunctions STATIC

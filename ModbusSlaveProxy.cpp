@@ -47,7 +47,15 @@ bool SlaveProxy::runQueue()
     if (txn)
     {
       if (not txn->autoDiscard)
-        resultQueue.push(std::move(txn));
+      {
+        if (not txn->hasReturnPath())
+          resultQueue.push(std::move(txn));
+        else
+        {
+          txn->returnPath->txnComingHome(::std::move(txn));
+          --pendingCount;
+        }
+      }
       else
         --pendingCount;
     }
@@ -58,16 +66,16 @@ bool SlaveProxy::runQueue()
 
 bool SlaveProxy::enqueueNoDelete(Txn& txn)
 {
-  txn.allowDeleteByUniquePtr = false;
+  txn.allowDeleteBySmartPtr = false;
   auto txnPtr = std::unique_ptr<Txn>(&txn);
 
   return enqueue(std::move(txnPtr));
 }
 
-bool SlaveProxy::enqueueDynamic(Txn& txn)
+bool SlaveProxy::enqueueDynamic(Txn* txn)
 {
-  txn.allowDeleteByUniquePtr = true;
-  auto txnPtr = std::unique_ptr<Txn>(&txn);
+  txn->allowDeleteBySmartPtr = true;
+  auto txnPtr = std::unique_ptr<Txn>(txn);
 
   return enqueue(std::move(txnPtr));
 }
@@ -76,8 +84,9 @@ bool SlaveProxy::enqueue(std::unique_ptr<Txn>&& txn)
 {
   bool success = false;
 
-  if (txn && not txn->busy)
+  if (txn)
   {
+    assert(not txn->busy && "TXN must not be busy in some processing!");
     if (master)
     {
       txn->busy = true;
@@ -104,7 +113,15 @@ bool SlaveProxy::enqueue(std::unique_ptr<Txn>&& txn)
   if (txn)
   {
     if (not txn->autoDiscard)
-      resultQueue.push(std::move(txn));
+    {
+      if (not txn->hasReturnPath())
+        resultQueue.push(std::move(txn));
+      else
+      {
+        txn->returnPath->txnComingHome(::std::move(txn));
+        --pendingCount;
+      }
+    }
     else
       --pendingCount;
   }

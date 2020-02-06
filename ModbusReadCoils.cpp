@@ -10,8 +10,8 @@
 namespace Modbus
 {
 
-ReadCoils2Array::ReadCoils2Array(unsigned* array, uint16_t numOfBits)
-: ReadBits2Array(FunctionCode, array, numOfBits)
+ReadCoils2Array::ReadCoils2Array(unsigned* array, uint16_t numOfBits, TxnReturnPath* rp)
+: ReadBits2Array(FunctionCode, array, numOfBits, rp)
 {}
 
 //ReadCoils2Array::~ReadCoils2Array()

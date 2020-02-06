@@ -17,7 +17,7 @@ class WriteSingleRegister: public Modbus::Txn
 {
 public:
   explicit
-  WriteSingleRegister(uint16_t addr);
+  WriteSingleRegister(uint16_t addr, TxnReturnPath* rp = nullptr);
 //  virtual ~WriteSingleRegister();
 
   WriteSingleRegister& setAddr(uint16_t addr);
@@ -34,7 +34,7 @@ public:
 
 protected:
   explicit
-  WriteSingleRegister(uint8_t functionCode, uint16_t addr);
+  WriteSingleRegister(uint8_t functionCode, uint16_t addr, TxnReturnPath* rp);
 
   static const uint8_t FunctionCode = 0x06;
   static const unsigned PduLength = 5;

@@ -16,7 +16,7 @@ namespace Modbus
 class WriteMultipleRegistersFromArray: public Modbus::Txn
 {
 public:
-  WriteMultipleRegistersFromArray(const uint16_t* array, uint16_t numOfRegs);
+  WriteMultipleRegistersFromArray(const uint16_t* array, uint16_t numOfRegs, TxnReturnPath* rp = nullptr);
 //  virtual ~WriteMultipleRegistersFromArray();
 
   void readFrom(const uint16_t* array, uint16_t numOfRegs);

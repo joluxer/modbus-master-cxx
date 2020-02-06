@@ -32,7 +32,7 @@ public:
 
 protected:
   explicit
-  ReadBits2Array(uint8_t functionCode, unsigned* array, uint16_t numOfBits);
+  ReadBits2Array(uint8_t functionCode, unsigned* array, uint16_t numOfBits, TxnReturnPath* rp);
 
   static const unsigned TxPduLength = 5;
   uint8_t txPduBuffer[TxPduLength];

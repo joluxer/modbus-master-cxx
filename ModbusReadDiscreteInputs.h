@@ -16,7 +16,7 @@ namespace Modbus
 class ReadDiscreteInputs2Array: public Modbus::ReadBits2Array
 {
 public:
-  ReadDiscreteInputs2Array(unsigned* array = nullptr, uint16_t numOfBits = 0);
+  ReadDiscreteInputs2Array(unsigned* array = nullptr, uint16_t numOfBits = 0, TxnReturnPath* rp = nullptr);
 //  virtual ~ReadDiscreteInputs2Array();
 
 protected:

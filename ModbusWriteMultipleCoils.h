@@ -16,7 +16,7 @@ namespace Modbus
 class WriteMultipleCoilsFromArray: public Modbus::Txn
 {
 public:
-  WriteMultipleCoilsFromArray(const unsigned* array, uint16_t numOfBits);
+  WriteMultipleCoilsFromArray(const unsigned* array, uint16_t numOfBits, TxnReturnPath* rp = nullptr);
 //  virtual ~WriteMultipleCoilsFromArray();
 
   void readFrom(const unsigned* array, uint16_t numOfBits);

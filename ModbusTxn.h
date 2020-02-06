@@ -5,8 +5,8 @@
  *      Author: lode
  */
 
-#ifndef TXN_H_
-#define TXN_H_
+#ifndef MODBUSTXN_H_
+#define MODBUSTXN_H_
 
 #include "ModbusTypes.h"
 
@@ -30,8 +30,9 @@ public:
 namespace Modbus
 {
 
+class TxnReturnPath;
 class SlaveProxy;
-class Master;
+class AbstractMaster;
 
 /**
  * Diese Klasse ist die Basis-Klasse für Transaktionen am Modbus. Die Verhaltensimplementationen
@@ -61,6 +62,8 @@ public:
   void setTxnId(uint16_t id);
   void setResultCode(ResultCode c);
 
+  bool hasReturnPath() const;
+
   class Fifo
   {
   public:
@@ -84,24 +87,23 @@ public:
 
 protected:
   explicit
-  Txn(uint8_t functionCode);
-
-  bool rxIsException(const PduConstDataBuffer& rxData);
+  Txn(uint8_t functionCode, TxnReturnPath* rp);
 
   uint8_t const functionCode;
   uint8_t slaveId;  // wird bei der Übergabe an ein SlaveProxy-Objekt festgelegt
   uint16_t txnId;   // should be set on the handover to a connection object, if the transport needs this, is nessessary to pull pending transactions form the pending list
   ResultCode resultCode;
+  TxnReturnPath* returnPath;
 
 private:
   std::unique_ptr<Txn> qNext;
 
   bool busy:1; // wird gesetzt, wenn das Objekt an einen SlaveProxy oder einen Master (für Broadcast) übergeben wurde,
   bool autoDiscard:1; // wenn dieses Flag gesetzt ist, wird das Objekt automatisch freigegeben, es braucht nicht wieder beim SlaveProxy abgeholt werden.
-  bool allowDeleteByUniquePtr:1;  // wird vom SlaveProxy gesetzt/gelöscht, wenn es über equeueNoDelete()/enqueueDynamic() in Umlauf gebracht wird.
+  bool allowDeleteBySmartPtr:1;  // wird vom SlaveProxy gesetzt/gelöscht, wenn es über equeueNoDelete()/enqueueDynamic() in Umlauf gebracht wird.
 
   friend class Modbus::SlaveProxy;
-  friend class Modbus::Master;
+  friend class Modbus::AbstractMaster;
   friend class std::default_delete< Modbus::Txn >;
 };
 
@@ -152,6 +154,12 @@ Txn::Fifo::operator bool() const
   return bool(qHead);
 }
 
+inline
+bool Txn::hasReturnPath() const
+{
+  return !!returnPath;
+}
+
 } /* namespace Modbus */
 
-#endif /* TXN_H_ */
+#endif /* MODBUSTXN_H_ */

@@ -12,14 +12,14 @@
 namespace Modbus
 {
 
-WriteSingleRegister::WriteSingleRegister(uint8_t functionCode, uint16_t addr)
-: Txn(functionCode),
+WriteSingleRegister::WriteSingleRegister(uint8_t functionCode, uint16_t addr, TxnReturnPath* rp)
+: Txn(functionCode, rp),
   pduBuffer{functionCode, uint8_t(addr >> 8), uint8_t(addr >> 0), 0x00, 0x00}
 {}
 
 
-WriteSingleRegister::WriteSingleRegister(uint16_t addr)
-: WriteSingleRegister(FunctionCode, addr)
+WriteSingleRegister::WriteSingleRegister(uint16_t addr, TxnReturnPath* rp)
+: WriteSingleRegister(FunctionCode, addr, rp)
 {}
 
 //WriteSingleRegister::~WriteSingleRegister()

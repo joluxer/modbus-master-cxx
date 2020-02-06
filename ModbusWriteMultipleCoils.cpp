@@ -13,8 +13,8 @@
 namespace Modbus
 {
 
-WriteMultipleCoilsFromArray::WriteMultipleCoilsFromArray(const unsigned* array, uint16_t numOfBits)
-: Txn(FunctionCode),
+WriteMultipleCoilsFromArray::WriteMultipleCoilsFromArray(const unsigned* array, uint16_t numOfBits, TxnReturnPath* rp)
+: Txn(FunctionCode, rp),
   bitBuffer{nullptr}, bufferLength{0}, numOfBits{0},
   txPduHeader{FunctionCode, 0xff, 0xff, 0xff, 0xff, 0x00}
 {

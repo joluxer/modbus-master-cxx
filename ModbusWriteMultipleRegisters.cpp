@@ -13,8 +13,8 @@
 namespace Modbus
 {
 
-WriteMultipleRegistersFromArray::WriteMultipleRegistersFromArray(const uint16_t* array, uint16_t numOfRegs)
-: Txn(FunctionCode),
+WriteMultipleRegistersFromArray::WriteMultipleRegistersFromArray(const uint16_t* array, uint16_t numOfRegs, TxnReturnPath* rp)
+: Txn(FunctionCode, rp),
   txPduHeader{FunctionCode, 0xff, 0xff, 0xff, 0xff, 0x00},
   regsBuffer{nullptr}, bufferLength{0}
 {

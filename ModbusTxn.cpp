@@ -16,7 +16,7 @@ namespace std
 //template<>
 void default_delete<Modbus::Txn>::operator()(Modbus::Txn *ptr) const
 {
-  if (ptr && ptr->allowDeleteByUniquePtr)
+  if (ptr && ptr->allowDeleteBySmartPtr)
     delete ptr;
 }
 
@@ -25,14 +25,15 @@ void default_delete<Modbus::Txn>::operator()(Modbus::Txn *ptr) const
 namespace Modbus
 {
 
-Txn::Txn(uint8_t functionCode)
+Txn::Txn(uint8_t functionCode, TxnReturnPath* rp)
 : functionCode(functionCode),
   slaveId(0xff),
   txnId(0),
   resultCode(NoError),
+  returnPath(rp),
   busy(false),
   autoDiscard(false),
-  allowDeleteByUniquePtr(false)
+  allowDeleteBySmartPtr(false)
 {}
 
 Txn::~Txn()

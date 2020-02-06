@@ -17,7 +17,7 @@ class WriteSingleCoil: public Modbus::WriteSingleRegister
 {
 public:
   explicit
-  WriteSingleCoil(uint16_t addr);
+  WriteSingleCoil(uint16_t addr, TxnReturnPath* rp = nullptr);
 //  virtual ~WriteSingleCoil();
 
   WriteSingleRegister& setWriteValue(uint16_t val) = delete;

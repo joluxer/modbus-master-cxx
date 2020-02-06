@@ -108,11 +108,8 @@ bool AbstractMaster::startTxn(std::unique_ptr<Txn>&& txn)
       else
       {
         broadcastRunning = false;
-        if (runningTxn)
-        {
-          runningTxn->setResultCode(UnknownCommunicationError);
-          completedList.push(std::move(runningTxn));
-        }
+        runningTxn->setResultCode(UnknownCommunicationError);
+        completedList.push(std::move(runningTxn));
       }
     }
     else
@@ -127,7 +124,12 @@ bool AbstractMaster::startTxn(std::unique_ptr<Txn>&& txn)
 
 std::unique_ptr<Txn> AbstractMaster::getCompletedTxn(uint8_t slaveId)
 {
-  return completedList.pullBy(slaveId);
+  auto txn = completedList.pullBy(slaveId);
+
+  if (0 == slaveId)
+    txn->busy = false;
+
+  return txn;
 }
 
 void AbstractMaster::addToList(AbstractMaster* &listHead)

@@ -17,7 +17,7 @@ class ReadCoils2Array: public Modbus::ReadBits2Array
 {
 public:
   explicit
-  ReadCoils2Array(unsigned* array = nullptr, uint16_t numOfBits = 0);
+  ReadCoils2Array(unsigned* array = nullptr, uint16_t numOfBits = 0, TxnReturnPath* rp = nullptr);
 //  virtual ~ReadCoils2Array();
 
 protected:

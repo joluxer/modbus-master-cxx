@@ -10,8 +10,8 @@
 namespace Modbus
 {
 
-ReadBits2Array::ReadBits2Array(uint8_t functionCode, unsigned* array, uint16_t numOfBits)
-: Txn(functionCode),
+ReadBits2Array::ReadBits2Array(uint8_t functionCode, unsigned* array, uint16_t numOfBits, TxnReturnPath* rp)
+: Txn(functionCode, rp),
   txPduBuffer{functionCode, 0xff, 0xff, 0xff, 0xff},
   bitBuffer{nullptr}, bufferLength{0}
 {

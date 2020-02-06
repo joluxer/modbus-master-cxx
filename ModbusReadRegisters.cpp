@@ -10,8 +10,8 @@
 namespace Modbus
 {
 
-ReadRegisters2Array::ReadRegisters2Array(uint8_t functionCode, uint16_t* array, uint16_t numOfRegs)
-: Txn(functionCode),
+ReadRegisters2Array::ReadRegisters2Array(uint8_t functionCode, uint16_t* array, uint16_t numOfRegs, TxnReturnPath* rp)
+: Txn(functionCode, rp),
   txPduBuffer{functionCode, 0xff, 0xff, 0xff, 0xff},
   regsBuffer{nullptr}, bufferLength{0}
 {

@@ -10,8 +10,8 @@
 namespace Modbus
 {
 
-WriteSingleCoil::WriteSingleCoil(uint16_t addr)
-: WriteSingleRegister(FunctionCode, addr)
+WriteSingleCoil::WriteSingleCoil(uint16_t addr, TxnReturnPath* rp)
+: WriteSingleRegister(FunctionCode, addr, rp)
 {}
 
 //WriteSingleCoil::~WriteSingleCoil()

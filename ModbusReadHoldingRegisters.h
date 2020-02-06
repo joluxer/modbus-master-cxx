@@ -16,7 +16,7 @@ namespace Modbus
 class ReadHoldingRegisters2Array: public Modbus::ReadRegisters2Array
 {
 public:
-  ReadHoldingRegisters2Array(uint16_t* array = nullptr, uint16_t numOfRegs = 0);
+  ReadHoldingRegisters2Array(uint16_t* array = nullptr, uint16_t numOfRegs = 0, TxnReturnPath* rp = nullptr);
 //  virtual ~ReadHoldingRegisters2Array();
 
 protected:

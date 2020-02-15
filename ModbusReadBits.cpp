@@ -7,6 +7,8 @@
 
 #include "ModbusReadBits.h"
 
+#include "FormattedLog.h"
+
 namespace Modbus
 {
 
@@ -65,14 +67,15 @@ unsigned ReadBits2Array::processRxData(const PduConstDataBuffer& rx)
   {
     do // no goto, just break
     {
-      if (rx.data[0] == functionCode)
+      if (rx.data[0] != functionCode)
       {
         setResultCode(AnswerDoesNotMatchRequest);
         break;
       }
 
-      if (rx.length == (2 + rx.data[1]))
+      if (rx.length != (2 + rx.data[1]))
       {
+        fLog(logDebug, "%s: RX length mismatch in PDU: %u status bytes => %u RX bytes, received: %u bytes", __PRETTY_FUNCTION__, rx.data[1], (2 + rx.data[1]), rx.length);
         setResultCode(UnknownCommunicationError);
         break;
       }

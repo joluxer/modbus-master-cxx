@@ -25,6 +25,8 @@ void default_delete<Modbus::Txn>::operator()(Modbus::Txn *ptr) const
 namespace Modbus
 {
 
+ByteStream *Txn::logDebug(nullptr);
+
 Txn::Txn(uint8_t functionCode, TxnReturnPath* rp)
 : functionCode(functionCode),
   slaveId(0xff),

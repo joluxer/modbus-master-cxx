@@ -7,6 +7,8 @@
 
 #include "ModbusWriteMultipleRegisters.h"
 
+#include "FormattedLog.h"
+
 #include <cstdlib>
 #include <cstring>
 
@@ -58,17 +60,17 @@ void WriteMultipleRegistersFromArray::setStartAddr(uint16_t addr)
 
 uint8_t WriteMultipleRegistersFromArray::getTxLength()
 {
-  return TxPduLength + txPduHeader[5];
+  return TxPduHeaderLength + txPduHeader[5];
 }
 
 bool WriteMultipleRegistersFromArray::getTxData(PduConstDataBuffer& tx, unsigned offset)
 {
   bool isComplete = false;
 
-  if (TxPduLength > offset)
+  if (TxPduHeaderLength > offset)
   {
     tx.data = &txPduHeader[offset];
-    tx.length = TxPduLength - offset;
+    tx.length = TxPduHeaderLength - offset;
     isComplete = (not regsBuffer) || (0 == bufferLength);
   }
   else if (regsBuffer && (0 < bufferLength))
@@ -77,7 +79,7 @@ bool WriteMultipleRegistersFromArray::getTxData(PduConstDataBuffer& tx, unsigned
     div_t idx;
 
     // Offsets berechnen
-    txOffset = offset - TxPduLength;
+    txOffset = offset - TxPduHeaderLength;
     idx = div(txOffset, sizeof(uint16_t));
     txIdx = idx.quot;
 
@@ -98,8 +100,8 @@ bool WriteMultipleRegistersFromArray::getTxData(PduConstDataBuffer& tx, unsigned
 
 unsigned WriteMultipleRegistersFromArray::processRxData(const PduConstDataBuffer& rx)
 {
-  if (::memcmp(rx.data, txPduHeader, TxPduLength - 1))
-    resultCode = NoReceiveBuffer;
+  if (((TxPduHeaderLength - 1) != rx.length)  or (::memcmp(rx.data, txPduHeader, TxPduHeaderLength - 1)))
+    resultCode = AnswerDoesNotMatchRequest;
 
   return rx.length;
 }

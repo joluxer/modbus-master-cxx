@@ -65,8 +65,8 @@ bool WriteSingleRegister::getTxData(PduConstDataBuffer& txData, unsigned offset)
 
 unsigned WriteSingleRegister::processRxData(const PduConstDataBuffer& rx)
 {
-  if (::memcmp(rx.data, pduBuffer, PduLength))
-    resultCode = NoReceiveBuffer;
+  if ((PduLength != rx.length)  or (::memcmp(rx.data, pduBuffer, PduLength)))
+    resultCode = AnswerDoesNotMatchRequest;
 
   return rx.length;
 }

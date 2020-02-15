@@ -7,6 +7,8 @@
 
 #include "ModbusAbstractTcpMaster.h"
 
+#include "FormattedLog.h"
+
 #include <cassert>
 
 namespace Modbus
@@ -15,7 +17,12 @@ namespace Modbus
 AbstractTcpMaster::AbstractTcpMaster(AbstractTimer& masterTimer)
 : AbstractMaster(masterTimer),
   serverPort{DefaultTcpPort}, numberMaxOfClientTransaction{16},
-  txnCounter{0}
+  txnCounter{0},
+  mbaphdTxBuffer{0},
+  mbaphdRxBuffer{0},
+  rxBuffer{0},
+  rxOffset{0},
+  expectedRxLen{0}
 {
   PT_INIT(&rxState);
 }
@@ -163,13 +170,19 @@ PT_THREAD(AbstractTcpMaster::rxEngine())
   } while (rxOffset < expectedRxLen);
 
   if (mbaphdRxBuffer[2] || mbaphdRxBuffer[3])
+  {
+    fLog(logDebug, "received unknown protocol version: 0x%02d%02d, discarding data", mbaphdRxBuffer[2], mbaphdRxBuffer[3]);
     PT_EXIT(pt);  // falsches Protokoll, eingelesene Daten verwerfen
+  }
 
   // Header auswerten, RX-Länge bestimmen
   expectedRxLen = (mbaphdRxBuffer[4] << 8) | (mbaphdRxBuffer[5] << 0);
 
   if (sizeof(rxBuffer) < expectedRxLen)
+  {
+    fLog(logDebug, "received data block size value too large: %d, discarding data", expectedRxLen);
     PT_EXIT(pt);  // empfangene Daten verwerfen
+  }
 
   rxOffset = 0;
   // RX-Daten einlesen

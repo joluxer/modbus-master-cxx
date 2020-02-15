@@ -10,11 +10,9 @@
 namespace Modbus
 {
 
-//TxnReturnPath::TxnReturnPath()
-//{
-//  // Auto-generated constructor stub
-//
-//}
+TxnReturnPath::TxnReturnPath()
+: pendingCount(0)
+{}
 
 TxnReturnPath::~TxnReturnPath()
 {
@@ -24,6 +22,9 @@ TxnReturnPath::~TxnReturnPath()
 
 void TxnReturnPath::txnComingHome(::std::unique_ptr<Txn>&& txn)
 {
+  if (txn->returnPath)
+    -- txn->returnPath->pendingCount;
+
   returnedList.push(::std::move(txn));
 }
 

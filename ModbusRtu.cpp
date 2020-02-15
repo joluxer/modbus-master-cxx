@@ -7,6 +7,8 @@
 
 #include "ModbusRtu.h"
 
+#include <cmath>
+
 namespace Modbus
 {
 
@@ -144,6 +146,47 @@ unsigned Rtu::runRx(ByteStream* line, uint8_t* buffer, const size_t bufferSpace)
 //  printf("\n%s: %d\n", __PRETTY_FUNCTION__, count);
 
   return count;
+}
+
+uint32_t Rtu::getTxGuardTime_ms(uint32_t baudrate)
+{
+  if (19200 >= baudrate)
+  {
+    auto q = div(long(35000), long(baudrate));
+
+    if (q.rem > 0)
+      ++q.quot;
+
+    return q.quot;
+  }
+
+  return 2;
+}
+
+uint32_t Rtu::getSplitLimit_ms(uint32_t baudrate)
+{
+  if (19200 >= baudrate)
+  {
+    auto q = div(long(35000), long(baudrate));
+
+    if (q.rem > 0)
+      ++q.quot;
+
+    return q.quot;
+  }
+
+  return 1;
+}
+
+PduConstDataBuffer Rtu::getPdu(uint8_t* buffer, uint8_t bufferFill, uint8_t offset)
+{
+  if ((offset + 2) <= bufferFill)
+  {
+    PduConstDataBuffer pdu{buffer + offset, uint8_t(bufferFill - offset - 2)};
+    return pdu;
+  }
+
+  return PduConstDataBuffer{buffer + offset, 0};
 }
 
 } /* namespace Modbus */

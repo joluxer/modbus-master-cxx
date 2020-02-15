@@ -33,8 +33,8 @@ public:
 
 protected:
   static const uint8_t FunctionCode = 0x10;
-  static const unsigned TxPduLength = 6;
-  uint8_t txPduHeader[TxPduLength];
+  static const unsigned TxPduHeaderLength = 6;
+  uint8_t txPduHeader[TxPduHeaderLength];
   uint8_t txByteBuffer[sizeof(uint16_t)];
   const uint16_t* regsBuffer;
   uint16_t bufferLength;

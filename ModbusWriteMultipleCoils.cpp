@@ -7,6 +7,8 @@
 
 #include "ModbusWriteMultipleCoils.h"
 
+#include "FormattedLog.h"
+
 #include <cstdlib>
 #include <cstring>
 
@@ -105,8 +107,8 @@ bool WriteMultipleCoilsFromArray::getTxData(PduConstDataBuffer& tx, unsigned off
 
 unsigned WriteMultipleCoilsFromArray::processRxData(const PduConstDataBuffer& rx)
 {
-  if (::memcmp(rx.data, txPduHeader, TxPduHeaderLength - 1))
-    resultCode = NoReceiveBuffer;
+  if (((TxPduHeaderLength - 1) != rx.length)  or (::memcmp(rx.data, txPduHeader, TxPduHeaderLength - 1)))
+    resultCode = AnswerDoesNotMatchRequest;
 
   return rx.length;
 }

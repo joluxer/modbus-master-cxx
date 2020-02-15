@@ -7,10 +7,15 @@
 
 #include "ModbusSlaveProxy.h"
 
+#include "FormattedLog.h"
+
 #include <cassert>
 
 namespace Modbus
 {
+
+ByteStream *SlaveProxy::logDebug(nullptr);
+ByteStream *SlaveProxy::logError(nullptr);
 
 SlaveProxy::SlaveProxy(uint8_t slaveId, bool pushMaster)
 : mySlaveId(slaveId), master(nullptr),
@@ -52,6 +57,7 @@ bool SlaveProxy::runQueue()
           resultQueue.push(std::move(txn));
         else
         {
+          fLog(logDebug, "pushing TXN to return path 0x%08x: slave ID %d, function code %d", uintptr_t(txn->returnPath), mySlaveId, txn->getFunctionCode());
           txn->returnPath->txnComingHome(::std::move(txn));
           --pendingCount;
         }
@@ -86,25 +92,45 @@ bool SlaveProxy::enqueue(std::unique_ptr<Txn>&& txn)
 
   if (txn)
   {
-    assert(not txn->busy && "TXN must not be busy in some processing!");
-    if (master)
+    if (not txn->busy)
     {
-      txn->busy = true;
-      txn->slaveId = mySlaveId;
-      txnQueue.push(std::move(txn));
+      // coutn the messages pending for the given returnPath
+      if (txn->returnPath)
+        ++ txn->returnPath->pendingCount;
 
-      if (master->readyForNextTxn())
-        master->startTxn(txnQueue.pop());
-      success = true;
+      if (master)
+      {
+        txn->busy = true;
+        txn->slaveId = mySlaveId;
+        auto rp = uintptr_t(txn->returnPath);
+        if (rp)
+          fLog(logDebug, "TXN enqueued with return path 0x%08x: slave ID %d, function code %d", rp, mySlaveId, txn->getFunctionCode());
+        else
+          fLog(logDebug, "TXN enqueued: slave ID %d, function code %d", mySlaveId, txn->getFunctionCode());
+        txnQueue.push(std::move(txn));
+
+        if (master->readyForNextTxn())
+          master->startTxn(txnQueue.pop());
+        success = true;
+      }
+      else
+      {
+        fLog(logDebug, "enqueue() rejected due to missing master connection; slave ID %d", mySlaveId);
+        txn->setResultCode(ProxyHasNoConnection);
+        resultQueue.push(std::move(txn));
+        success = true;
+      }
     }
     else
     {
-      txn->setResultCode(ProxyHasNoConnection);
-      resultQueue.push(std::move(txn));
-      success = true;
+      // logging of rejected TXNs because of busy flag
+      fLog(logError, "enqueue() not possible for busy TXN, slave ID %d, function code %d", mySlaveId, txn->getFunctionCode());
     }
   }
-  // TODO: logging of rejected TXNs because of busy flag
+  else
+  {
+    fLog(logDebug, "enqueue() with empty TXN pointer, slave ID %d", mySlaveId);
+  }
 
   if (success)
     ++pendingCount;
@@ -118,6 +144,7 @@ bool SlaveProxy::enqueue(std::unique_ptr<Txn>&& txn)
         resultQueue.push(std::move(txn));
       else
       {
+        fLog(logDebug, "pushing TXN to return path 0x%08x: slave ID %d, function code %d", uintptr_t(txn->returnPath), mySlaveId, txn->getFunctionCode());
         txn->returnPath->txnComingHome(::std::move(txn));
         --pendingCount;
       }
@@ -131,17 +158,17 @@ bool SlaveProxy::enqueue(std::unique_ptr<Txn>&& txn)
 
 std::unique_ptr<Txn> SlaveProxy::dequeueResult()
 {
-  auto result = resultQueue.pop();
+  auto txn = resultQueue.pop();
 
-  if (result)
+  if (txn)
   {
+    fLog(logDebug, "TXN dequeued: slave ID %d, function code %d", mySlaveId, txn->getFunctionCode());
     assert(pendingCount);
     --pendingCount;
-    result->busy = false;
+    txn->busy = false;
   }
 
-
-  return result;
+  return txn;
 }
 
 } /* namespace Modbus */

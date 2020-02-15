@@ -10,6 +10,7 @@
 
 #include "ModbusTxn.h"
 #include "AbstractTimer.h"
+#include "ByteStream.h"
 
 #include <memory>
 
@@ -44,6 +45,9 @@ public:
 
   static const uint32_t DefaultResponseTimeout_ms = 5000;
   static const uint32_t DefaultTurnaroundDelay_ms = 200;
+
+  static
+  ByteStream *logDebug, *logError;
 
 protected:
   explicit

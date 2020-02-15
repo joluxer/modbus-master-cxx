@@ -23,7 +23,7 @@ SerialMaster<EncoderPolicy>::SerialMaster(AbstractTimer& masterTimer, AbstractTi
   rxSplitTimer(rxSplitTimer),
   txGuardTime_ms(0),
   rxSplitLimit_ms(15),
-  rxFill(0),
+  rxFill(0), rxOffset(0),
   txLength(0), txDoneCount(0),
   doTx(false), doRx(false), rxFrameIsBad(false),
   rxSplitTimerIsActive(false),
@@ -84,10 +84,14 @@ bool SerialMaster<EncoderPolicy>::startTx()
     PT_INIT(&txPt);
     doTx = true;
 
+    if (enableTransmitter)
+      enableTransmitter->send(true);
+
     return true;
   }
 
-  runningTxn->setResultCode(UnknownCommunicationError);
+  if (runningTxn)
+    runningTxn->setResultCode(UnknownCommunicationError);
 
   completedList.push(std::move(runningTxn));
 
@@ -107,9 +111,6 @@ PT_THREAD(SerialMaster<EncoderPolicy>::txRunner())
   if (rs485TxEnable)
     rs485TxEnable->activate();
 
-  if (enableTransmitter)
-    enableTransmitter->send(true);
-
   txDoneCount = lineCodec.startTx(serialLine, runningTxn);
 
   while (txLength > txDoneCount)
@@ -122,11 +123,11 @@ PT_THREAD(SerialMaster<EncoderPolicy>::txRunner())
 
   PT_WAIT_WHILE(pt, lineCodec.sendChecksum(serialLine));
 
-  if (enableTransmitter)
-    enableTransmitter->send(false);
-
  if (rs485TxEnable)
     rs485TxEnable->deactivate();
+
+ if (enableTransmitter)
+   enableTransmitter->send(false);
 
   txGuardTimer.start(txGuardTime_ms);
 
@@ -170,7 +171,7 @@ PT_THREAD(SerialMaster<EncoderPolicy>::rxRunner())
 {
   register struct pt* pt = &rxPt;
   register unsigned rxCount = 0;
-//  rxCount = 0;
+  PduConstDataBuffer pdu;
 
   PT_BEGIN(pt);
 
@@ -228,16 +229,18 @@ PT_THREAD(SerialMaster<EncoderPolicy>::rxRunner())
 
   // process RX data
   rxOffset = 1; // mask the address byte
-  if (not handledAsException(PduConstDataBuffer{&rxBuffer[rxOffset], uint8_t(rxFill - rxOffset)}))
+  pdu = lineCodec.getPdu(rxBuffer, rxFill, rxOffset);
+  if (not handledAsException(pdu))
   {
     runningTxn->setResultCode(NoError); // if RX processing finds any error, the result code is overwritten
     do
     {
       rxCount = rxOffset;
-      rxOffset += runningTxn->processRxData(PduConstDataBuffer{&rxBuffer[rxOffset], uint8_t(rxFill - rxOffset)});
+      rxOffset += runningTxn->processRxData(pdu);
       if (rxCount == rxOffset)
         PT_YIELD(pt);
-    } while (rxOffset < rxFill);
+      pdu = lineCodec.getPdu(rxBuffer, rxFill, rxOffset);
+    } while (0 < pdu.length);
   }
 
   if (enableReceiver)

@@ -7,6 +7,8 @@
 
 #include "ModbusReadRegisters.h"
 
+#include "FormattedLog.h"
+
 namespace Modbus
 {
 
@@ -71,8 +73,9 @@ unsigned ReadRegisters2Array::processRxData(const PduConstDataBuffer& rx)
         break;
       }
 
-      if (rx.length == (2 + rx.data[1]))
+      if (rx.length != (2 + rx.data[1]))
       {
+        fLog(logDebug, "%s: RX length mismatch in PDU: %u registers => %u bytes, received: %u bytes", __PRETTY_FUNCTION__, rx.data[1] / 2, (2 + rx.data[1]), rx.length);
         setResultCode(UnknownCommunicationError);
         break;
       }

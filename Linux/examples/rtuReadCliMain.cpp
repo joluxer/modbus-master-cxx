@@ -18,7 +18,7 @@
 #include "Util/TaggingOutStream.h"
 
 #include "Util/PrintRegistersFormatted.h"
-#include "Util/PrintModbusMasterExceptionCode.h"
+#include "ModbusMaster/Util/ModbusMasterExceptionCodeToString.h"
 
 #include "arg/arg.h"
 #include "arg/val.h"
@@ -201,7 +201,7 @@ int main(int argc, char ** argv)
   }
   else
   {
-    printModbusMasterExceptionCode(rc);
+    printf("Modbus exception code: %d (%s)\n", rc, modbusMasterExceptionCodeToString(rc));
   }
 
   return rc;

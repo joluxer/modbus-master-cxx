@@ -10,6 +10,8 @@
 
 #include "ModbusTypes.h"
 
+#include "ByteStream.h"
+
 #include <memory>
 
 namespace Modbus
@@ -85,6 +87,9 @@ public:
     unsigned length() const;
   };
 
+  static
+  ByteStream *logDebug;
+
 protected:
   explicit
   Txn(uint8_t functionCode, TxnReturnPath* rp);
@@ -102,9 +107,10 @@ private:
   bool autoDiscard:1; // wenn dieses Flag gesetzt ist, wird das Objekt automatisch freigegeben, es braucht nicht wieder beim SlaveProxy abgeholt werden.
   bool allowDeleteBySmartPtr:1;  // wird vom SlaveProxy gesetzt/gelöscht, wenn es über equeueNoDelete()/enqueueDynamic() in Umlauf gebracht wird.
 
-  friend class Modbus::SlaveProxy;
-  friend class Modbus::AbstractMaster;
-  friend class std::default_delete< Modbus::Txn >;
+  friend class TxnReturnPath;
+  friend class SlaveProxy;
+  friend class AbstractMaster;
+  friend class std::default_delete< Txn >;
 };
 
 } /* namespace Modbus */

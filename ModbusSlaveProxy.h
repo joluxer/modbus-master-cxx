@@ -12,6 +12,8 @@
 #include "TxnReturnPath.h"
 #include "ModbusAbstractMaster.h"
 
+#include "ByteStream.h"
+
 #include <memory>
 #include <cstdint>
 
@@ -36,6 +38,9 @@ public:
   std::unique_ptr<Txn> dequeueResult(); ///< @return a non-empty pointer, when a result is available and not yet returned to sender
 
   uint8_t slaveId() const;
+
+  static
+  ByteStream *logDebug, *logError;
 
 protected:
   const uint8_t mySlaveId;

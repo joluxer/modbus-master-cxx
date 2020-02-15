@@ -13,7 +13,6 @@
 #include "ByteStream.h"
 
 #include <cstdint>
-#include <cmath>
 #include <memory>
 
 #ifndef MODBUS_CRC_ALGORITHM_BITSHIFT
@@ -46,6 +45,8 @@ public:
   static constexpr
   bool    restartRxFrame();
   bool    testChecksumIsGood(uint8_t* buffer, uint8_t bufferFill);
+  static
+  PduConstDataBuffer getPdu(uint8_t* buffer, uint8_t bufferFill, uint8_t offset);
 
 protected:
   uint16_t pduCrc;
@@ -54,38 +55,6 @@ protected:
   void resetCrc();
   void updateCrc(uint8_t const* data, unsigned len);
 };
-
-inline
-uint32_t Rtu::getTxGuardTime_ms(uint32_t baudrate)
-{
-  if (19200 >= baudrate)
-  {
-    auto q = div(uint32_t(35000), baudrate);
-
-    if (q.rem > 0)
-      ++q.quot;
-
-    return q.quot;
-  }
-
-  return 2;
-}
-
-inline
-uint32_t Rtu::getSplitLimit_ms(uint32_t baudrate)
-{
-  if (19200 >= baudrate)
-  {
-    auto q = div(uint32_t(15000), baudrate);
-
-    if (q.rem > 0)
-      ++q.quot;
-
-    return q.quot;
-  }
-
-  return 1;
-}
 
 inline
 void Rtu::resetCrc()

@@ -7,10 +7,15 @@
 
 #include "ModbusAbstractMaster.h"
 
+#include "FormattedLog.h"
+
 #include <cassert>
 
 namespace Modbus
 {
+
+ByteStream *AbstractMaster::logDebug(nullptr);
+ByteStream *AbstractMaster::logError(nullptr);
 
 AbstractMaster::AbstractMaster(AbstractTimer& masterTimer)
 : turnaroundDelay_ms(DefaultTurnaroundDelay_ms),
@@ -23,6 +28,7 @@ AbstractMaster::AbstractMaster(AbstractTimer& masterTimer)
 AbstractMaster::~AbstractMaster()
 {
   // Auto-generated destructor stub
+  // intentionally left empty
 }
 
 void AbstractMaster::setTurnaroundDelay_ms(uint32_t ms)
@@ -108,7 +114,8 @@ bool AbstractMaster::startTxn(std::unique_ptr<Txn>&& txn)
       else
       {
         broadcastRunning = false;
-        runningTxn->setResultCode(UnknownCommunicationError);
+        if (not runningTxn->resultCode)
+          runningTxn->setResultCode(UnknownCommunicationError);
         completedList.push(std::move(runningTxn));
       }
     }
@@ -186,22 +193,31 @@ bool AbstractMaster::handledAsException(const PduConstDataBuffer& rx, uint16_t t
     if (txn)
     {
       if (txn->exceptionCode() != rx.data[0])
+      {
+        fLog(logError, "received PDU does not match running transaction: exception code: 0x%02d, PDU code: 0x%02d", txn->exceptionCode(), rx.data[0]);
         runningTxn = std::move(txn);
+      }
     }
     else
     {
       txn = pendingList.pullBy(txnId);
-      if (txn->exceptionCode() != rx.data[0])
+      if (txn and (txn->exceptionCode() != rx.data[0]))
+      {
+        fLog(logError, "received PDU does not match referenced transaction: TXN ID: 0x%04d, exception code: 0x%02d, PDU code: 0x%02d, PDU result: 0x%02d", txnId, txn->exceptionCode(), rx.data[0], rx.data[1]);
         pendingList.push(std::move(txn));
+      }
+      else
+      {
+        fLog(logError, "could not find referenced transaction during exception check: TXN ID: 0x%04d", txnId);
+      }
     }
 
     if (txn)
     {
+      fLog(logDebug, "received PDU exception: PDU code: 0x%02d, PDU result: 0x%02d", rx.data[0], rx.data[1]);
       txn->setResultCode(ResultCode(rx.data[1]));
       completedList.push(std::move(txn));
     }
-
-    // TODO: logging of rejected exception data
   }
 
   return isException;

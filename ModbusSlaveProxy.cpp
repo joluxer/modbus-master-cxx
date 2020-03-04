@@ -20,6 +20,10 @@ ByteStream *SlaveProxy::logError(nullptr);
 SlaveProxy::SlaveProxy(uint8_t slaveId, bool pushMaster)
 : mySlaveId(slaveId), master(nullptr),
   pendingCount(0),
+#ifdef DEBUG_MB_TXNPATH
+  txnQueue(typeid(*this), this),
+  resultQueue(typeid(*this), this),
+#endif
   pushMaster(pushMaster)
 {}
 
@@ -57,13 +61,19 @@ bool SlaveProxy::runQueue()
           resultQueue.push(std::move(txn));
         else
         {
-          fLog(logDebug, "pushing TXN to return path 0x%08x: slave ID %d, function code %d", uintptr_t(txn->returnPath), mySlaveId, txn->getFunctionCode());
-          txn->returnPath->txnComingHome(::std::move(txn));
+          auto rp = uintptr_t(txn->returnPath);
+          auto txnp = uintptr_t(txn.get());
+          fLog(logDebug, "pushing TXN 0x%08x to return path 0x%08x: slave ID %d, function code %d", txnp, rp, mySlaveId, txn->getFunctionCode());
+          txn->busy = false;
           --pendingCount;
+          txn->returnPath->txnComingHome(::std::move(txn));
         }
       }
       else
+      {
+        txn->busy = false;
         --pendingCount;
+      }
     }
   }
 
@@ -103,10 +113,11 @@ bool SlaveProxy::enqueue(std::unique_ptr<Txn>&& txn)
         txn->busy = true;
         txn->slaveId = mySlaveId;
         auto rp = uintptr_t(txn->returnPath);
+        auto txnp = uintptr_t(txn.get());
         if (rp)
-          fLog(logDebug, "TXN enqueued with return path 0x%08x: slave ID %d, function code %d", rp, mySlaveId, txn->getFunctionCode());
+          fLog(logDebug, "TXN 0x%08x enqueued with return path 0x%08x: slave ID %d, function code %d", txnp, rp, mySlaveId, txn->getFunctionCode());
         else
-          fLog(logDebug, "TXN enqueued: slave ID %d, function code %d", mySlaveId, txn->getFunctionCode());
+          fLog(logDebug, "TXN 0x%08x enqueued: slave ID %d, function code %d", mySlaveId, txnp, txn->getFunctionCode());
         txnQueue.push(std::move(txn));
 
         if (master->readyForNextTxn())
@@ -144,13 +155,19 @@ bool SlaveProxy::enqueue(std::unique_ptr<Txn>&& txn)
         resultQueue.push(std::move(txn));
       else
       {
-        fLog(logDebug, "pushing TXN to return path 0x%08x: slave ID %d, function code %d", uintptr_t(txn->returnPath), mySlaveId, txn->getFunctionCode());
-        txn->returnPath->txnComingHome(::std::move(txn));
+        auto rp = uintptr_t(txn->returnPath);
+        auto txnp = uintptr_t(txn.get());
+        fLog(logDebug, "pushing TXN 0x%08x to return path 0x%08x: slave ID %d, function code %d", txnp, rp, mySlaveId, txn->getFunctionCode());
+        txn->busy = false;
         --pendingCount;
+        txn->returnPath->txnComingHome(::std::move(txn));
       }
     }
     else
+    {
+      txn->busy = false;
       --pendingCount;
+    }
   }
 
   return success;
@@ -162,7 +179,8 @@ std::unique_ptr<Txn> SlaveProxy::dequeueResult()
 
   if (txn)
   {
-    fLog(logDebug, "TXN dequeued: slave ID %d, function code %d", mySlaveId, txn->getFunctionCode());
+    auto txnp = uintptr_t(txn.get());
+    fLog(logDebug, "TXN 0x%08x dequeued: slave ID %d, function code %d", txnp, mySlaveId, txn->getFunctionCode());
     assert(pendingCount);
     --pendingCount;
     txn->busy = false;

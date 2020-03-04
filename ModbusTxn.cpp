@@ -36,6 +36,9 @@ Txn::Txn(uint8_t functionCode, TxnReturnPath* rp)
   busy(false),
   autoDiscard(false),
   allowDeleteBySmartPtr(false)
+#ifdef DEBUG_MB_TXNPATH
+  ,fifo(nullptr)
+#endif
 {}
 
 Txn::~Txn()
@@ -59,6 +62,9 @@ void Txn::Fifo::push(std::unique_ptr<Txn>&& txn)
   {
     assert(!txn->qNext);
 
+#ifdef DEBUG_MB_TXNPATH
+    txn->fifo = this;
+#endif
     *qBack = std::move(txn);
     qBack = &(qBack->get()->qNext);
   }
@@ -70,6 +76,9 @@ std::unique_ptr<Txn> Txn::Fifo::pop()
 
   if (txn)
   {
+#ifdef DEBUG_MB_TXNPATH
+    txn->fifo = nullptr;
+#endif
     qHead = std::move(txn->qNext);
 
     if (!qHead)
@@ -102,6 +111,9 @@ std::unique_ptr<Txn> Txn::List::pullBy(uint8_t id)
     if (qHead.get()->slaveId == id)
     {
       retVal = std::move(qHead);
+#ifdef DEBUG_MB_TXNPATH
+      retVal->fifo = nullptr;
+#endif
       qHead = std::move(retVal->qNext);
 
       if (!qHead)
@@ -117,6 +129,9 @@ std::unique_ptr<Txn> Txn::List::pullBy(uint8_t id)
       if (prevPtrPtr->get()->qNext->slaveId == id)
       {
         retVal = std::move(prevPtrPtr->get()->qNext);
+#ifdef DEBUG_MB_TXNPATH
+        retVal->fifo = nullptr;
+#endif
         prevPtrPtr->get()->qNext = std::move(retVal->qNext);
         if (!prevPtrPtr->get()->qNext)
           qBack = &(prevPtrPtr->get()->qNext);
@@ -136,6 +151,9 @@ std::unique_ptr<Txn> Txn::List::pullBy(uint16_t id)
     if (qHead.get()->hasTxnId(id))
     {
       retVal = std::move(qHead);
+#ifdef DEBUG_MB_TXNPATH
+      retVal->fifo = nullptr;
+#endif
       qHead = std::move(retVal->qNext);
 
       if (!qHead)
@@ -151,6 +169,9 @@ std::unique_ptr<Txn> Txn::List::pullBy(uint16_t id)
       if (prevPtrPtr->get()->qNext->hasTxnId(id))
       {
         retVal = std::move(prevPtrPtr->get()->qNext);
+#ifdef DEBUG_MB_TXNPATH
+        retVal->fifo = nullptr;
+#endif
         prevPtrPtr->get()->qNext = std::move(retVal->qNext);
         if (!prevPtrPtr->get()->qNext)
           qBack = &(prevPtrPtr->get()->qNext);

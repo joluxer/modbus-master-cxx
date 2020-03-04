@@ -20,6 +20,10 @@ ByteStream *AbstractMaster::logError(nullptr);
 AbstractMaster::AbstractMaster(AbstractTimer& masterTimer)
 : turnaroundDelay_ms(DefaultTurnaroundDelay_ms),
   responseTimeout_ms(DefaultResponseTimeout_ms),
+#ifdef DEBUG_MB_TXNPATH
+  pendingList(typeid(*this), this),
+  completedList(typeid(*this), this),
+#endif
   responseTimer(masterTimer),
   broadcastRunning(false),
   listNext(nullptr)

@@ -9,12 +9,14 @@
 #include "../ModbusSlaveProxy.h"
 
 #include <cassert>
+#include <algorithm>
 
 namespace Modbus
 {
 
 FdSelectRtuDriver::FdSelectRtuDriver(bool slavesPushMaster)
 : uartStream(nullptr),
+  mbMasterTimer(mbMasterCounter), txGuardTimer(txGuardCounter), rxSplitTimer(rxSplitCounter),
   modbusMaster(mbMasterTimer, txGuardTimer, rxSplitTimer),
   txSignal(this, &FdSelectRtuDriver::privEnableTx),
   rxSignal(this, &FdSelectRtuDriver::privEnableRx),
@@ -38,6 +40,16 @@ void FdSelectRtuDriver::destroy()
   if (uartStream)
     uartStream->closeOsDevice();
   slaves.clear();
+}
+
+void FdSelectRtuDriver::setResponseTimeout_ms(uint32_t ms)
+{
+  modbusMaster.setResponseTimeout_ms(ms);
+}
+
+void FdSelectRtuDriver::setTurnaroundDelay_ms(uint32_t ms)
+{
+  modbusMaster.setTurnaroundDelay_ms(ms);
 }
 
 void FdSelectRtuDriver::setTimeoutsForBaudrate(uint32_t baudrate)
@@ -145,9 +157,7 @@ int FdSelectRtuDriver::getErrno() const
   return myErrno;
 }
 
-
-// this implements the workhorse for reacting to readable and writable I/O
-void FdSelectRtuDriver::execute(bool readable, bool writable)
+unsigned FdSelectRtuDriver::driveSlavesAndMaster()
 {
   assert(not destroyed and uartStream);
 
@@ -175,11 +185,28 @@ void FdSelectRtuDriver::execute(bool readable, bool writable)
     } while (slave != nextStartSlave);
   }
 
-  auto masterState = modbusMaster.operate();
+  return modbusMaster.operate();
+}
+
+// this implements the workhorse for reacting to readable and writable I/O
+void FdSelectRtuDriver::execute(bool readable, bool writable)
+{
+  auto masterState = driveSlavesAndMaster();
 
   waitForWrite = !!(masterState & 1);
 
   waitForRead = !!(masterState & 2);
+}
+
+unsigned FdSelectRtuDriver::operate()
+{
+  auto masterState = driveSlavesAndMaster();
+  unsigned sleep = 1000;
+
+  if (masterState)
+    sleep = ::std::min({mbMasterTimer.remaining_ms(), txGuardTimer.remaining_ms(), rxSplitTimer.remaining_ms()});
+
+  return sleep;
 }
 
 int FdSelectRtuDriver::fd()

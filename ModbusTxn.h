@@ -29,6 +29,14 @@ public:
 };
 }
 
+//#ifndef DEBUG_MB_TXNPATH
+//#define DEBUG_MB_TXNPATH
+//#endif
+
+//#ifdef DEBUG_MB_TXNPATH
+//#undef DEBUG_MB_TXNPATH
+//#endif
+
 namespace Modbus
 {
 
@@ -69,7 +77,14 @@ public:
   class Fifo
   {
   public:
+#ifdef DEBUG_MB_TXNPATH
+    Fifo(const std::type_info& messageClass, void* owner)
+    : qBack{&qHead}, listOwner(owner), ownerType(messageClass.name())
+    {};
+#else
     Fifo() : qBack{&qHead} {};
+#endif
+
     void push(std::unique_ptr<Txn>&& t);
     std::unique_ptr<Txn> pop();
 
@@ -77,11 +92,17 @@ public:
 
   protected:
     std::unique_ptr<Txn> qHead, *qBack;
+#ifdef DEBUG_MB_TXNPATH
+    void* listOwner;
+    const char* ownerType;
+#endif
   };
 
   class List: public Fifo
   {
   public:
+    using Fifo::Fifo;
+
     std::unique_ptr<Txn> pullBy(uint8_t slaveId);
     std::unique_ptr<Txn> pullBy(uint16_t txnId);
     unsigned length() const;
@@ -106,6 +127,10 @@ private:
   bool busy:1; // wird gesetzt, wenn das Objekt an einen SlaveProxy oder einen Master (für Broadcast) übergeben wurde,
   bool autoDiscard:1; // wenn dieses Flag gesetzt ist, wird das Objekt automatisch freigegeben, es braucht nicht wieder beim SlaveProxy abgeholt werden.
   bool allowDeleteBySmartPtr:1;  // wird vom SlaveProxy gesetzt/gelöscht, wenn es über equeueNoDelete()/enqueueDynamic() in Umlauf gebracht wird.
+
+#ifdef DEBUG_MB_TXNPATH
+  Fifo* fifo;
+#endif
 
   friend class TxnReturnPath;
   friend class SlaveProxy;

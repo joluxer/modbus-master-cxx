@@ -12,7 +12,8 @@
 #include "../ModbusSerialMaster.h"
 #include "FdSelectHandler.h"
 #include "Hardware/Linux/TtyUart.h"
-#include "Util/PosixTimer.h"
+#include "Util/PosixMillisecondCounter.h"
+#include "Util/MsCounterTimer.h"
 #include "Callback.h"
 
 #include <memory>
@@ -46,19 +47,25 @@ public:
    */
   bool setPort(const ::std::string& portPath, unsigned baudrate = 19200, const ::std::string& charFmt = "8e1"); // accepted values for charFmt are "8e1", "8n2" and for broken slaves also "8n1" (which is not allowed by the standard)
 
+  void setResponseTimeout_ms(uint32_t ms);
+  void setTurnaroundDelay_ms(uint32_t ms);
+
   void setTimeoutsForBaudrate(uint32_t baudrate); ///< use this, if serial port baudrate is managed outside of this class
   void setTimeouts_ms(uint32_t txGuardTime_ms, uint32_t rxSplitLimit_ms); ///< set timeouts explicitly, normally they depend on the baudrate in use, see also @ref setTimeoutsForBaudrate()
   void getTimeouts_ms(uint32_t &txGuardTime_ms, uint32_t &rxSplitLimit_ms);
 
   ::std::weak_ptr<SlaveProxy> getSlave(uint8_t slaveId);
 
+  unsigned operate(); // drive the timeout watchdogs aside the normal input/output handling, return the number of milliseconds of desired maximum interval until next call of operate()
+
   bool hasPosixError() const;
   int getErrno() const;
 
 protected:
   ::Hardware::Linux::TtyUart* uartStream;
-  // TODO: evtl. durch MillisecondCounterTimer ersetzen, um auf die Restlaufzeit des mbMasterTimers zugreifen zu können
-  PosixTimer mbMasterTimer, txGuardTimer, rxSplitTimer;
+  // TODO: evtl. durch MsCounterTimer ersetzen, um auf die Restlaufzeit des mbMasterTimers zugreifen zu können
+  PosixMillisecondCounter mbMasterCounter, txGuardCounter, rxSplitCounter;
+  MsCounterTimer mbMasterTimer, txGuardTimer, rxSplitTimer;
   SerialMaster<Rtu> modbusMaster;
   ::std::map<uint8_t, ::std::shared_ptr<SlaveProxy> > slaves;
   ::std::map<uint8_t, ::std::shared_ptr<SlaveProxy> >::iterator nextStartSlave;
@@ -74,6 +81,7 @@ private:
 
    void privEnableTx(bool enable);
    void privEnableRx(bool enable);
+   unsigned driveSlavesAndMaster(); // return the master state
 };
 
 } /* namespace Modbus */

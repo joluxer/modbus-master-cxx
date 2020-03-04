@@ -11,7 +11,11 @@ namespace Modbus
 {
 
 TxnReturnPath::TxnReturnPath()
-: pendingCount(0)
+:
+#ifdef DEBUG_MB_TXNPATH
+  returnedList(typeid(*this), this),
+#endif
+  pendingCount(0)
 {}
 
 TxnReturnPath::~TxnReturnPath()
